@@ -1,12 +1,19 @@
 package com.example.kotlinsample.member.domain.service
 
-import com.example.kotlinsample.member.domain.Member
+import com.example.kotlinsample.member.domain.model.Member
+import com.example.kotlinsample.member.domain.model.MemberRole
+import com.example.kotlinsample.member.domain.model.MemberStatus
+import com.example.kotlinsample.member.domain.dto.*
 import com.example.kotlinsample.member.repository.MemberRepository
-import jakarta.transaction.Transactional
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 class MemberService(
     private val memberRepository: MemberRepository,
     private val passwordEncoder: PasswordEncoder
@@ -62,6 +69,7 @@ class MemberService(
     }
 
     // ID로 회원 조회
+    @Transactional(readOnly = true)
     fun getMemberById(id: Long): MemberResponse {
         val member = memberRepository.findById(id)
             .orElseThrow { IllegalArgumentException("존재하지 않는 회원입니다: $id") }
@@ -69,6 +77,7 @@ class MemberService(
     }
 
     // 사용자명으로 회원 조회
+    @Transactional(readOnly = true)
     fun getMemberByUsername(username: String): MemberResponse {
         val member = memberRepository.findByUsername(username)
             .orElseThrow { IllegalArgumentException("존재하지 않는 사용자입니다: $username") }
@@ -76,6 +85,7 @@ class MemberService(
     }
 
     // 회원 목록 조회 (페이징)
+    @Transactional(readOnly = true)
     fun getMembers(
         page: Int = 0,
         size: Int = 20,
@@ -182,6 +192,7 @@ class MemberService(
     }
 
     // 최근 로그인한 회원들 조회
+    @Transactional(readOnly = true)
     fun getRecentlyLoggedInMembers(page: Int = 0, size: Int = 10): PagedMemberResponse {
         val pageable = PageRequest.of(page, size)
         val memberPage = memberRepository.findRecentlyLoggedInMembers(MemberStatus.ACTIVE, pageable)
@@ -200,6 +211,7 @@ class MemberService(
     }
 
     // 통계 정보 조회
+    @Transactional(readOnly = true)
     fun getMemberStatistics(): Map<String, Any> {
         return mapOf(
             "totalMembers" to memberRepository.count(),
@@ -215,10 +227,12 @@ class MemberService(
     }
 
     // 사용자명/이메일 중복 체크
+    @Transactional(readOnly = true)
     fun checkUsernameAvailability(username: String): Boolean {
         return !memberRepository.existsByUsername(username)
     }
 
+    @Transactional(readOnly = true)
     fun checkEmailAvailability(email: String): Boolean {
         return !memberRepository.existsByEmail(email)
     }

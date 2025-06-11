@@ -1,4 +1,4 @@
-package com.example.kotlinsample.member.domain
+package com.example.kotlinsample.member.domain.model
 
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp

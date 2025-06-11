@@ -1,6 +1,8 @@
 package com.example.kotlinsample.member.repository
 
-import com.example.kotlinsample.member.domain.Member
+import com.example.kotlinsample.member.domain.model.Member
+import com.example.kotlinsample.member.domain.model.MemberRole
+import com.example.kotlinsample.member.domain.model.MemberStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository

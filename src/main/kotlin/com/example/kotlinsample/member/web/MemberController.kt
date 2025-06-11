@@ -1,10 +1,15 @@
 package com.example.kotlinsample.member.web
 
-import com.example.kotlinsample.member.domain.dto.LoginRequest
-import com.example.kotlinsample.member.domain.dto.MemberRegistrationRequest
-import com.example.kotlinsample.member.domain.dto.MemberResponse
+import com.example.kotlinsample.member.domain.dto.*
+import com.example.kotlinsample.member.domain.model.MemberRole
+import com.example.kotlinsample.member.domain.model.MemberStatus
 import com.example.kotlinsample.member.domain.service.MemberService
+import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
 
 @RestController

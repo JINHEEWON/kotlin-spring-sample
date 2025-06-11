@@ -1,9 +1,9 @@
 package com.example.kotlinsample.member.domain.dto
 
-import com.example.kotlinsample.member.domain.Gender
-import com.example.kotlinsample.member.domain.Member
-import com.example.kotlinsample.member.domain.MemberRole
-import com.example.kotlinsample.member.domain.MemberStatus
+import com.example.kotlinsample.member.domain.model.Gender
+import com.example.kotlinsample.member.domain.model.Member
+import com.example.kotlinsample.member.domain.model.MemberRole
+import com.example.kotlinsample.member.domain.model.MemberStatus
 import com.fasterxml.jackson.annotation.JsonFormat
 import jakarta.validation.constraints.*
 import java.time.LocalDate
