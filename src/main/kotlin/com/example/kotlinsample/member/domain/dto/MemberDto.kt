@@ -11,29 +11,29 @@ import java.time.LocalDateTime
 
 // 회원 가입 요청 DTO
 data class MemberRegistrationRequest(
-    @NotBlank(message = "사용자명은 필수입니다")
-    @Size(min = 3, max = 50, message = "사용자명은 3-50자 사이여야 합니다")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "사용자명은 영문, 숫자, 언더스코어만 사용 가능합니다")
+    @field:NotBlank(message = "사용자명은 필수입니다")
+    @field:Size(min = 3, max = 50, message = "사용자명은 3-50자 사이여야 합니다")
+    @field:Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "사용자명은 영문, 숫자, 언더스코어만 사용 가능합니다")
     val username: String,
 
-    @NotBlank(message = "이메일은 필수입니다")
-    @Email(message = "올바른 이메일 형식이 아닙니다")
-    @Size(max = 100, message = "이메일은 100자를 초과할 수 없습니다")
+    @field:NotBlank(message = "이메일은 필수입니다")
+    @field:Email(message = "올바른 이메일 형식이 아닙니다")
+    @field:Size(max = 100, message = "이메일은 100자를 초과할 수 없습니다")
     val email: String,
 
-    @NotBlank(message = "비밀번호는 필수입니다")
-    @Size(min = 8, max = 100, message = "비밀번호는 8-100자 사이여야 합니다")
+    @field:NotBlank(message = "비밀번호는 필수입니다")
+    @field:Size(min = 8, max = 100, message = "비밀번호는 8-100자 사이여야 합니다")
     val password: String,
 
-    @NotBlank(message = "이름은 필수입니다")
-    @Size(max = 100, message = "이름은 100자를 초과할 수 없습니다")
+    @field:NotBlank(message = "이름은 필수입니다")
+    @field:Size(max = 100, message = "이름은 100자를 초과할 수 없습니다")
     val name: String,
 
-    @Pattern(regexp = "^010-\\d{4}-\\d{4}$", message = "전화번호 형식이 올바르지 않습니다 (010-1234-5678)")
+    @field:Pattern(regexp = "^010-\\d{4}-\\d{4}$", message = "전화번호 형식이 올바르지 않습니다 (010-1234-5678)")
     val phone: String? = null,
 
-    @Past(message = "생년월일은 과거 날짜여야 합니다")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @field:Past(message = "생년월일은 과거 날짜여야 합니다")
+    @field:JsonFormat(pattern = "yyyy-MM-dd")
     val birthDate: LocalDate? = null,
 
     val gender: Gender? = null,
