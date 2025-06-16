@@ -10,20 +10,72 @@ import org.springframework.validation.BindException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.context.request.WebRequest
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Nothing>> {
-        val errors = ex.bindingResult.fieldErrors
-            .associate { it.field to (it.defaultMessage ?: "잘못된 입력입니다") }
+//    @ExceptionHandler(MethodArgumentNotValidException::class)
+//    fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Nothing>> {
+//        val errors = ex.bindingResult.fieldErrors
+//            .associate { it.field to (it.defaultMessage ?: "잘못된 입력입니다") }
+//
+//        val message = errors.values.firstOrNull() ?: "유효성 검사 실패"
+//        return ResponseEntity
+//            .badRequest()
+//            .body(ApiResponse.error(message))
+//    }
 
-        val message = errors.values.firstOrNull() ?: "유효성 검사 실패"
-        return ResponseEntity
-            .badRequest()
-            .body(ApiResponse.error(message))
+    /**
+     * 잘못된 인증 정보 예외 처리
+     */
+    @ExceptionHandler(InvalidCredentialsException::class)
+    fun handleInvalidCredentialsException(
+        ex: InvalidCredentialsException,
+        request: WebRequest
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            error = ErrorDetail(
+                code = "INVALID_CREDENTIALS",
+                message = ex.message ?: "이메일 또는 비밀번호가 올바르지 않습니다"
+            )
+        )
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse)
+    }
+
+    /**
+     * 토큰 만료 예외 처리
+     */
+    @ExceptionHandler(TokenExpiredException::class)
+    fun handleTokenExpiredException(
+        ex: TokenExpiredException,
+        request: WebRequest
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            error = ErrorDetail(
+                code = "TOKEN_EXPIRED",
+                message = ex.message ?: "토큰이 만료되었습니다"
+            )
+        )
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse)
+    }
+
+    /**
+     * 유효하지 않은 토큰 예외 처리
+     */
+    @ExceptionHandler(InvalidTokenException::class)
+    fun handleInvalidTokenException(
+        ex: InvalidTokenException,
+        request: WebRequest
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            error = ErrorDetail(
+                code = "INVALID_TOKEN",
+                message = ex.message ?: "유효하지 않은 토큰입니다"
+            )
+        )
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse)
     }
 
     @ExceptionHandler(ResourceNotFoundException::class)

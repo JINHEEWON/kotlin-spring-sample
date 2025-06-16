@@ -35,6 +35,8 @@ class SecurityConfig(
         val authProvider = DaoAuthenticationProvider()
         authProvider.setUserDetailsService(customUserDetailsService)
         authProvider.setPasswordEncoder(passwordEncoder())
+        // 사용자를 찾을 수 없을 때도 비밀번호 검증을 수행하여 타이밍 공격 방지
+        authProvider.setHideUserNotFoundExceptions(false)
         return authProvider
     }
 

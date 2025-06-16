@@ -21,7 +21,7 @@ interface FileRepository : JpaRepository<File, Long> {
     ): File?
 
     // 특정 사용자의 파일 개수
-    fun countByUploaderAndDeletedAtIsNull(uploader: User): Long
+    fun countByUploader(uploader: User): Long
 
     // 특정 사용자의 총 파일 크기
     @Query("""

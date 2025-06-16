@@ -28,9 +28,22 @@ class AuthService(
      */
     fun login(loginRequest: LoginRequest): LoginResponse {
         try {
+
             // 1. 사용자 존재 여부 확인
             val user = userRepository.findByEmailAndDeletedAtIsNull(loginRequest.email)
                 ?: throw InvalidCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다")
+
+
+            // DB에 저장된 실제 비밀번호 확인
+            println("DB password: ${user.password}")
+
+            // 입력받은 평문 비밀번호 확인
+            println("Input password: ${loginRequest.password}")
+
+            // 인코더로 매칭 테스트
+            val matches = passwordEncoder.matches(loginRequest.password, user.password)
+            println("Password matches: $matches")
+
 
             // 2. 인증 처리
             val authentication = authenticationManager.authenticate(
@@ -39,6 +52,18 @@ class AuthService(
                     loginRequest.password
                 )
             )
+
+//            // 1. AuthenticationManager에게 모든 인증 위임
+//            val authentication = authenticationManager.authenticate(
+//                UsernamePasswordAuthenticationToken(
+//                    loginRequest.email,
+//                    loginRequest.password
+//                )
+//            )
+//
+//            // 2. 인증 성공 후 사용자 정보 조회
+//            val user = userRepository.findByEmailAndDeletedAtIsNull(loginRequest.email)
+//                ?: throw InvalidCredentialsException("인증에 실패했습니다")
 
             // 3. SecurityContext에 Authentication 설정
             SecurityContextHolder.getContext().authentication = authentication

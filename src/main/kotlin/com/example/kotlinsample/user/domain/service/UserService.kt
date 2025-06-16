@@ -65,7 +65,7 @@ class UserService(
             ?: throw ResourceNotFoundException("사용자를 찾을 수 없습니다")
 
         val postCount = postRepository.countByAuthorAndDeletedAtIsNull(user)
-        val fileCount = fileRepository.countByUploaderAndDeletedAtIsNull(user)
+        val fileCount = fileRepository.countByUploader(user)
 
         return UserDetailResponse(
             id = user.id!!,
@@ -227,7 +227,7 @@ class UserService(
         val totalPostCount = postRepository.countByAuthorAndDeletedAtIsNull(user)
         val publishedPostCount = postRepository.countByAuthorAndStatusAndDeletedAtIsNull(user, PostStatus.PUBLISHED)
         val draftPostCount = postRepository.countByAuthorAndStatusAndDeletedAtIsNull(user, PostStatus.DRAFT)
-        val fileCount = fileRepository.countByUploaderAndDeletedAtIsNull(user)
+        val fileCount = fileRepository.countByUploader(user)
         val totalFileSize = fileRepository.sumFileSizeByUploaderAndDeletedAtIsNull(user) ?: 0L
 
         return UserStatistics(
