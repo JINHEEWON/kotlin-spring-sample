@@ -6,6 +6,7 @@ import com.example.kotlinsample.common.exception.dto.FieldError
 import com.example.kotlinsample.member.web.ApiResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.validation.BindException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -76,6 +77,17 @@ class GlobalExceptionHandler {
             )
         )
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse)
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException::class)
+    fun handleAuthorizationDeniedException(e: AuthorizationDeniedException): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            error = ErrorDetail(
+                code = "ACCESS_DENIED",
+                message = "접근 권한이 없습니다"
+            )
+        )
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse)
     }
 
     @ExceptionHandler(ResourceNotFoundException::class)

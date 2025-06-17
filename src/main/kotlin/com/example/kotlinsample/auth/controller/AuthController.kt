@@ -2,6 +2,7 @@ package com.example.kotlinsample.auth.controller
 
 import com.example.kotlinsample.auth.dto.*
 import com.example.kotlinsample.auth.service.AuthService
+import com.example.kotlinsample.common.exception.UnauthorizedException
 import com.example.kotlinsample.common.response.ApiResponse
 import com.example.kotlinsample.security.UserPrincipal
 import jakarta.validation.Valid
@@ -82,8 +83,9 @@ class AuthController(
      */
     @GetMapping("/me")
     fun getCurrentUser(
-        @AuthenticationPrincipal userPrincipal: UserPrincipal
+        @AuthenticationPrincipal userPrincipal: UserPrincipal?
     ): ResponseEntity<ApiResponse<LoginResponse.UserInfo>> {
+        val user = userPrincipal ?: throw UnauthorizedException("인증되지 않은 사용자입니다")
         val userInfo = authService.getCurrentUser(userPrincipal.email)
         return ResponseEntity.ok(
             ApiResponse(

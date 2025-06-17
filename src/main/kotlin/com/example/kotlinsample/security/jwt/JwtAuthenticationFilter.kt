@@ -46,15 +46,18 @@ class JwtAuthenticationFilter(
             }
         } catch (ex: TokenExpiredException) {
             logger.warn("JWT token expired: ${ex.message}")
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 만료되었습니다")
+            handleTokenException(response, "TOKEN_EXPIRED", "토큰이 만료되었습니다")
+            //response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 만료되었습니다")
             return
         } catch (ex: InvalidTokenException) {
             logger.warn("Invalid JWT token: ${ex.message}")
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다")
+            handleTokenException(response, "INVALID_TOKEN", "유효하지 않은 토큰입니다")
+            //response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다")
             return
         } catch (ex: Exception) {
             logger.error("JWT authentication error", ex)
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증 처리 중 오류가 발생했습니다")
+            handleTokenException(response, "AUTHENTICATION_ERROR", "인증 처리 중 오류가 발생했습니다")
+            //response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증 처리 중 오류가 발생했습니다")
             return
         }
 
@@ -69,5 +72,25 @@ class JwtAuthenticationFilter(
         return if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             bearerToken.substring(7)
         } else null
+    }
+
+    /**
+     * 토큰 예외 처리
+     */
+    private fun handleTokenException(response: HttpServletResponse, code: String, message: String) {
+        response.status = HttpServletResponse.SC_UNAUTHORIZED
+        response.contentType = "application/json;charset=UTF-8"
+
+        val errorResponse = """
+            {
+                "error": {
+                    "code": "$code",
+                    "message": "$message"
+                }
+            }
+        """.trimIndent()
+
+        response.writer.write(errorResponse)
+        response.writer.flush()
     }
 }

@@ -29,7 +29,7 @@ data class User(
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    val createdAt: LocalDateTime? = null,
+    var createdAt: LocalDateTime? = null,
 
     @LastModifiedDate
     @Column(nullable = false)
@@ -37,7 +37,19 @@ data class User(
 
     @Column
     var deletedAt: LocalDateTime? = null
-)
+) {
+    @PrePersist  // 저장되기 직전에 실행
+    fun prePersist() {
+        val now = LocalDateTime.now()
+        createdAt = now
+        updatedAt = now
+    }
+
+    @PreUpdate   // 업데이트되기 직전에 실행
+    fun preUpdate() {
+        updatedAt = LocalDateTime.now()
+    }
+}
 
 enum class UserRole {
     USER, ADMIN
