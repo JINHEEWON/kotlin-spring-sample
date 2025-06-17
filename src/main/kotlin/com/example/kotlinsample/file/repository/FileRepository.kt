@@ -14,10 +14,10 @@ import org.springframework.stereotype.Repository
 interface FileRepository : JpaRepository<File, Long> {
 
     // 업로더와 상태로 파일 찾기
-    fun findByIdAndUploaderIdAndUploadStatus(
+    fun findByIdAndUploaderEmailAndUploadStatus(
         id: Long,
-        uploaderId: Long,
-        status: UploadStatus
+        uploaderEmail: String,
+        uploadStatus: UploadStatus
     ): File?
 
     // 특정 사용자의 파일 개수

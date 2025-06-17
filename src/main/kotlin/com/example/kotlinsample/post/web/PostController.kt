@@ -51,10 +51,10 @@ class PostController(
         @RequestParam(defaultValue = "createdAt") sort: String,
         @RequestParam(defaultValue = "desc") direction: String,
         @RequestParam(required = false) search: String?,
-        @RequestParam(required = false) authorId: Long?,
+        @RequestParam(required = false) authorEmail: String?,
         @RequestParam(required = false) status: PostStatus?
     ): ResponseEntity<ApiResponse<PostListResponse>> {
-        val posts = postService.getAllPosts(page, size, sort, direction, search, authorId, status)
+        val posts = postService.getAllPosts(page, size, sort, direction, search, authorEmail, status)
         return ResponseEntity.ok(
             ApiResponse(
                 success = true,
@@ -90,7 +90,7 @@ class PostController(
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(required = false) status: PostStatus?
     ): ResponseEntity<ApiResponse<PostListResponse>> {
-        val posts = postService.getMyPosts(userPrincipal.id, page, size, status)
+        val posts = postService.getMyPosts(userPrincipal.email, page, size, status)
         return ResponseEntity.ok(
             ApiResponse(
                 success = true,
@@ -105,12 +105,12 @@ class PostController(
      */
     @GetMapping("/search")
     fun searchPosts(
-        @RequestParam keyword: String,
+        @RequestParam keyword: String?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(defaultValue = "true") publishedOnly: Boolean
     ): ResponseEntity<ApiResponse<PostListResponse>> {
-        val posts = postService.searchPosts(keyword, page, size, publishedOnly)
+        val posts = postService.searchPosts(keyword ?: "", page, size, publishedOnly)
         return ResponseEntity.ok(
             ApiResponse(
                 success = true,
@@ -129,7 +129,7 @@ class PostController(
         @Valid @RequestBody request: PostRequest,
         @AuthenticationPrincipal userPrincipal: UserPrincipal
     ): ResponseEntity<ApiResponse<PostResponse>> {
-        val post = postService.createPost(request, userPrincipal.id)
+        val post = postService.createPost(request, userPrincipal.email)
         return ResponseEntity.status(HttpStatus.CREATED).body(
             ApiResponse(
                 success = true,
@@ -149,7 +149,7 @@ class PostController(
         @Valid @RequestBody request: PostUpdateRequest,
         @AuthenticationPrincipal userPrincipal: UserPrincipal
     ): ResponseEntity<ApiResponse<PostResponse>> {
-        val post = postService.updatePost(id, request, userPrincipal.id)
+        val post = postService.updatePost(id, request, userPrincipal.email)
         return ResponseEntity.ok(
             ApiResponse(
                 success = true,
@@ -168,7 +168,7 @@ class PostController(
         @PathVariable id: Long,
         @AuthenticationPrincipal userPrincipal: UserPrincipal
     ): ResponseEntity<ApiResponse<Nothing>> {
-        postService.deletePost(id, userPrincipal.id)
+        postService.deletePost(id, userPrincipal.email)
         return ResponseEntity.ok(
             ApiResponse(
                 success = true,

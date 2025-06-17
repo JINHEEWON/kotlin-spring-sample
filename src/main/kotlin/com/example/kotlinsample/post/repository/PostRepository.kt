@@ -26,12 +26,18 @@ interface PostRepository : JpaRepository<Post, Long> {
     ): Page<Post>
 
     // 특정 사용자의 게시글 조회
-    fun findByAuthorAndDeletedAtIsNullOrderByCreatedAtDesc(
-        author: User,
+    fun findByAuthorEmailAndDeletedAtIsNullOrderByCreatedAtDesc(
+        authorEmail: String,
         pageable: Pageable
     ): Page<Post>
 
     // 특정 사용자의 상태별 게시글 조회
+    fun findByAuthorEmailAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
+        authorEmail: String,
+        status: PostStatus,
+        pageable: Pageable
+    ): Page<Post>
+
     fun findByAuthorAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
         author: User,
         status: PostStatus,

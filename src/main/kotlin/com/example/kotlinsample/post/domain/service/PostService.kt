@@ -32,20 +32,18 @@ class PostService(
         sort: String = "createdAt",
         direction: String = "desc",
         search: String? = null,
-        authorId: Long? = null,
+        authorEmail: String? = null,  // authorId -> authorEmail
         status: PostStatus? = null
     ): PostListResponse {
         val pageable = createPageable(page, size, sort, direction)
 
         val posts = when {
             search != null -> postRepository.searchByKeyword(search, pageable)
-            authorId != null && status != null -> {
-                val author = getUserById(authorId)
-                postRepository.findByAuthorAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(author, status, pageable)
+            authorEmail != null && status != null -> {
+                postRepository.findByAuthorEmailAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(authorEmail, status, pageable)
             }
-            authorId != null -> {
-                val author = getUserById(authorId)
-                postRepository.findByAuthorAndDeletedAtIsNullOrderByCreatedAtDesc(author, pageable)
+            authorEmail != null -> {
+                postRepository.findByAuthorEmailAndDeletedAtIsNullOrderByCreatedAtDesc(authorEmail, pageable)
             }
             status != null -> postRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(status, pageable)
             else -> postRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable)
@@ -58,8 +56,8 @@ class PostService(
                 content = post.content?.take(100), // 미리보기용 100자만
                 status = post.status,
                 author = AuthorResponse(
-                    id = post.author.id!!,
-                    name = post.author.name
+                    email = post.authorEmail,
+                    name = post.author?.name ?: "Unknown User"  // null 체크 추가
                 ),
                 createdAt = post.createdAt!!,
                 fileCount = post.files.size
@@ -90,8 +88,8 @@ class PostService(
                 content = post.content?.take(100),
                 status = post.status,
                 author = AuthorResponse(
-                    id = post.author.id!!,
-                    name = post.author.name
+                    email = post.authorEmail,
+                    name = post.author?.name ?: "Unknown User"
                 ),
                 createdAt = post.createdAt!!,
                 fileCount = post.files.size
@@ -111,18 +109,17 @@ class PostService(
 
     @Transactional(readOnly = true)
     fun getMyPosts(
-        userId: Long,
+        userEmail: String,  // userId -> userEmail
         page: Int = 0,
         size: Int = 10,
         status: PostStatus? = null
     ): PostListResponse {
-        val user = getUserById(userId)
         val pageable = PageRequest.of(page, size, Sort.by("createdAt").descending())
 
         val posts = if (status != null) {
-            postRepository.findByAuthorAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(user, status, pageable)
+            postRepository.findByAuthorEmailAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(userEmail, status, pageable)
         } else {
-            postRepository.findByAuthorAndDeletedAtIsNullOrderByCreatedAtDesc(user, pageable)
+            postRepository.findByAuthorEmailAndDeletedAtIsNullOrderByCreatedAtDesc(userEmail, pageable)
         }
 
         val postSummaries = posts.map { post ->
@@ -132,8 +129,8 @@ class PostService(
                 content = post.content?.take(100),
                 status = post.status,
                 author = AuthorResponse(
-                    id = post.author.id!!,
-                    name = post.author.name
+                    email = post.authorEmail,
+                    name = post.author?.name ?: "Unknown User"
                 ),
                 createdAt = post.createdAt!!,
                 fileCount = post.files.size
@@ -143,13 +140,11 @@ class PostService(
         return PostListResponse(postSummaries)
     }
 
-    fun createPost(request: PostRequest, userId: Long): PostResponse {
-        val author = getUserById(userId)
-
+    fun createPost(request: PostRequest, userEmail: String): PostResponse {  // userId -> userEmail
         val post = Post(
             title = request.title,
             content = request.content,
-            author = author,
+            authorEmail = userEmail,  // email 직접 설정
             status = request.status
         )
 
@@ -157,18 +152,18 @@ class PostService(
 
         // 파일 연결 처리
         request.fileIds?.let { fileIds ->
-            attachFilesToPost(savedPost, fileIds, userId)
+            attachFilesToPost(savedPost, fileIds, userEmail)
         }
 
         return convertToPostResponse(savedPost)
     }
 
-    fun updatePost(id: Long, request: PostUpdateRequest, userId: Long): PostResponse {
+    fun updatePost(id: Long, request: PostUpdateRequest, userEmail: String): PostResponse {  // userId -> userEmail
         val post = postRepository.findByIdAndDeletedAtIsNull(id)
             ?: throw ResourceNotFoundException("게시글을 찾을 수 없습니다")
 
         // 작성자 확인
-        if (post.author.id != userId) {
+        if (post.authorEmail != userEmail) {
             throw UnauthorizedException("게시글을 수정할 권한이 없습니다")
         }
 
@@ -182,19 +177,19 @@ class PostService(
             // 기존 파일 연결 제거
             post.files.clear()
             // 새 파일 연결
-            attachFilesToPost(post, fileIds, userId)
+            attachFilesToPost(post, fileIds, userEmail)
         }
 
         val updatedPost = postRepository.save(post)
         return convertToPostResponse(updatedPost)
     }
 
-    fun deletePost(id: Long, userId: Long) {
+    fun deletePost(id: Long, userEmail: String) {  // userId -> userEmail
         val post = postRepository.findByIdAndDeletedAtIsNull(id)
             ?: throw ResourceNotFoundException("게시글을 찾을 수 없습니다")
 
         // 작성자 확인
-        if (post.author.id != userId) {
+        if (post.authorEmail != userEmail) {
             throw UnauthorizedException("게시글을 삭제할 권한이 없습니다")
         }
 
@@ -225,8 +220,8 @@ class PostService(
                 content = post.content?.take(100),
                 status = post.status,
                 author = AuthorResponse(
-                    id = post.author.id!!,
-                    name = post.author.name
+                    email = post.authorEmail,
+                    name = post.author?.name ?: "Unknown User"
                 ),
                 createdAt = post.createdAt!!,
                 fileCount = post.files.size
@@ -240,22 +235,22 @@ class PostService(
         val sortDirection = if (direction.lowercase() == "asc") Sort.Direction.ASC else Sort.Direction.DESC
         val sortBy = when (sort) {
             "title" -> "title"
-            "author" -> "author.name"
+            "author" -> "authorEmail"  // author.name -> authorEmail로 변경
             else -> "createdAt"
         }
         return PageRequest.of(page, size, Sort.by(sortDirection, sortBy))
     }
 
-    private fun getUserById(userId: Long): User {
-        return userRepository.findByIdAndDeletedAtIsNull(userId)
+    private fun getUserByEmail(email: String): User {  // 새로 추가
+        return userRepository.findByEmailAndDeletedAtIsNull(email)
             ?: throw ResourceNotFoundException("사용자를 찾을 수 없습니다")
     }
 
-    private fun attachFilesToPost(post: Post, fileIds: List<Long>, userId: Long) {
+    private fun attachFilesToPost(post: Post, fileIds: List<Long>, userEmail: String) {  // userId -> userEmail
         // 파일 소유권 확인 및 연결
         fileIds.forEach { fileId ->
-            val file = fileRepository.findByIdAndUploaderIdAndUploadStatus(
-                fileId, userId, UploadStatus.COMPLETED
+            val file = fileRepository.findByIdAndUploaderEmailAndUploadStatus(  // uploader_id -> uploader_email
+                fileId, userEmail, UploadStatus.COMPLETED
             ) ?: throw ResourceNotFoundException("파일을 찾을 수 없거나 권한이 없습니다: $fileId")
 
             // PostFile 엔티티 생성하여 연결
@@ -270,8 +265,8 @@ class PostService(
             content = post.content,
             status = post.status,
             author = AuthorResponse(
-                id = post.author.id!!,
-                name = post.author.name
+                email = post.authorEmail,
+                name = post.author?.name ?: "Unknown User"
             ),
             createdAt = post.createdAt!!,
             updatedAt = post.updatedAt!!,

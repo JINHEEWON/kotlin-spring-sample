@@ -22,9 +22,12 @@ data class Post(
     @Column(columnDefinition = "TEXT")
     var content: String?,
 
+    @Column(name = "author_email", nullable = false)
+    var authorEmail: String,  // 실제 데이터는 이 컬럼에 저장
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    val author: User,
+    @JoinColumn(name = "author_email", referencedColumnName = "email", insertable = false, updatable = false)
+    val author: User? = null,  // email로 조인
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -32,7 +35,7 @@ data class Post(
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    val createdAt: LocalDateTime? = null,
+    var createdAt: LocalDateTime? = null,
 
     @LastModifiedDate
     @Column(nullable = false)
@@ -43,7 +46,19 @@ data class Post(
 
     @OneToMany(mappedBy = "post", cascade = [CascadeType.ALL], orphanRemoval = true)
     val files: MutableList<PostFile> = mutableListOf()
-)
+){
+    @PrePersist  // 저장되기 직전에 실행
+    fun prePersist() {
+        val now = LocalDateTime.now()
+        createdAt = now
+        updatedAt = now
+    }
+
+    @PreUpdate   // 업데이트되기 직전에 실행
+    fun preUpdate() {
+        updatedAt = LocalDateTime.now()
+    }
+}
 
 enum class PostStatus {
     DRAFT, PUBLISHED, ARCHIVED

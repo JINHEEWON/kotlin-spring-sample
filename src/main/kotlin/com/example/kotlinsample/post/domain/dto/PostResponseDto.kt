@@ -16,7 +16,7 @@ data class PostResponse(
 )
 
 data class AuthorResponse(
-    val id: Long,
+    val email: String,  // id 대신 email 사용
     val name: String
 )
 
